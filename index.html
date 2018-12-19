@@ -1,0 +1,225 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>歴史大富豪Online</title>
+</head>
+<body>
+  <div id='title_page' style='display:block'>
+    <div style="position:relative;left:10px;top:10px;">
+      <img src="load/images/title.png">
+      <div style="position:absolute;left:250px;top:350px;">
+        <div id="entry_num">入室人数：</div>
+        <p>あなたのニックネームを入力してくれ</p>
+        <input type="text" id="input_name" style="width:200px">
+        <button onclick="pushName()">決定</button>
+      </div>
+    </div>
+  </div>
+  <div id='chat_page' style='display:none'>
+    <div style="position:relative;left:10px;top:10px">
+      <img src="load/images/chat_haikei.png">
+      <div style="position:absolute;left:500px;top:50px">
+        <div id="entry_num2">入室人数：</div>
+        <div id="how_many" style="margin-bottom:20px">あと：</div>
+        <div style="margin-bottom:20px">メンバー</div>
+        <div id="member">
+        </div>
+      </div>
+      <div id="start_game" style="position:absolute;left:500px;top:400px">
+      </div>
+      <div style="position:absolute;left:50px;top:50px">
+        <div>メッセージ</div>
+        <input type="text" id="input_message" style="width:300px">
+        <button onclick="publishMessage()">送信</button>
+        <br>
+        <select id="show_message" size="15" style="width:400px;margin-top:30px">
+        </select>
+      </div>
+    </div>
+
+  </div>
+  <div id='game_page' style='display:none'>
+    <div style="position:relative;left:10px;top:10px">
+      <img src="load/images/haikei.png">
+      <div id='card_field'>
+        <div id='front_field'></div>
+        <div id='left_field'></div>
+        <div id='right_field'></div>
+        <div id='mycard_field'></div>
+        <div id='center_field'></div>
+      </div>
+    </div>
+  </div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="text/javascript">
+    var socketio=io.connect('http://localhost:4567');
+    var userName;
+    socketio.on("hello_world",function(data){});
+    socketio.on("entry_num",function(data){updateEntryNum(data.value)});
+    socketio.on("user_in",function(data){entryUser(data.value)});
+    socketio.on("over_capacity",function(){overCapacity()});
+    socketio.on("add_message",function(data){addMessage(data.value)});
+    socketio.on("u_hash",function(data){addMember(data.value)});
+    socketio.on("start_game",function(){startGame()});
+    socketio.on("enemyUserInfo",function(data){getEnemyInfo(data.value)});
+
+    function start(){
+      socketio.emit("connected");
+    }
+
+    function changePage(page){
+      let pageHash={};
+      pageHash["title_page"]=document.getElementById("title_page");
+      pageHash["chat_page"]=document.getElementById("chat_page");
+      pageHash["game_page"]=document.getElementById("game_page");
+      let pageLength=Object.keys(pageHash).length;
+      for(let pg in pageHash){
+        if(pg==page){
+          pageHash[pg].style.display="block";
+        }else{
+          pageHash[pg].style.display="none";
+        }
+      }
+    }
+
+    function updateEntryNum(entry_num){
+      let entryDom=document.getElementById("entry_num");
+      let entryDom2=document.getElementById("entry_num2");
+      let startDom=document.getElementById("start_game");
+      let howManyDom=document.getElementById("how_many");
+      entryDom.innerHTML="入室人数："+String(entry_num);
+      entryDom2.innerHTML="入室人数："+String(entry_num);
+      howManyDom.innerHTML="あと："+String(4-entry_num);
+      while(startDom.firstChild){
+        startDom.removeChild(startDom.firstChild);
+      }
+      if(entry_num==4){
+        let startButton=document.createElement('button');
+        startButton.innerHTML="ゲームを始める";
+        startButton.style="width:200px;height:50px";
+        startButton.onclick=function(){
+          socketio.emit("start_game");
+        }
+        startDom.appendChild(startButton);
+      }
+    }
+
+    function pushName(){
+      let nameDom=document.getElementById("input_name");
+      let nameFormValue=nameDom.value;
+      if(nameFormValue==""){
+        alert("あなたの名前を入れてね！！");
+      }else{
+        socketio.emit("add_user",nameFormValue);
+        userName=nameFormValue;
+      }
+    }
+
+    function entryUser(user_name){
+      userName=user_name;
+      changePage("chat_page");
+    }
+
+    function overCapacity(){
+      alert("定員オーバーです！！");
+    }
+
+    function publishMessage(){
+      let inputDom=document.getElementById("input_message");
+      let message=inputDom.value;
+      if(message!=""){
+        socketio.emit("push_message",message);
+        inputDom.value="";
+      }
+    }
+
+    function addMessage(message){
+      let showDom=document.getElementById("show_message");
+      let optionDom=document.createElement("option");
+      message=new Date().toLocaleTimeString()+" "+message;
+      optionDom.innerHTML=message;
+      showDom.insertBefore(optionDom,showDom.firstChild);
+    }
+
+    function startGame(){
+      changePage("game_page")
+    }
+
+    function addMember(hash){
+      let memberDom=document.getElementById("member");
+      while(memberDom.firstChild){
+        memberDom.removeChild(memberDom.firstChild);
+      }
+      for(let i in hash){
+        let dirDom=document.createElement('div');
+        dirDom.innerHTML=hash[i];
+        memberDom.appendChild(dirDom);
+      }
+    }
+
+    function getEnemyInfo(enemyInfo){
+      drawEnemyCard(enemyInfo);
+    }
+
+    function drawEnemyCard(enemyInfo){
+      drawLeftEnemyCard(enemyInfo[0].num);
+      drawFrontEnemyCard(enemyInfo[1].num);
+      drawRightEnemyCard(enemyInfo[2].num);
+    }
+
+    function drawLeftEnemyCard(enemyLength){
+      var domCard=document.getElementById('left_field');
+      while(domCard.firstChild){
+        domCard.removeChild(domCard.firstChild);
+      }
+      for(let i=0;i<enemyLength;i++){
+        var domImg=document.createElement('img');
+        domImg.src='./load/images/enemy_side.png';
+        let space=(400-70)/enemyLength;
+        let card_x=10;
+        let card_y=120+space*i;
+        let card_place="position:absolute;left:"+String(card_x)+";top:"+String(card_y)+";";
+        domImg.style=card_place;
+        domCard.appendChild(domImg);
+      }
+    }
+
+    function drawFrontEnemyCard(enemyLength){
+      var domCard=document.getElementById('front_field');
+      while(domCard.firstChild){
+        domCard.removeChild(domCard.firstChild);
+      }
+      for(let i=0;i<enemyLength;i++){
+        var domImg=document.createElement('img');
+        domImg.src='./load/images/enemy_front.png';
+        let space=(350-70)/enemyLength;
+        let card_x=225+space*i;
+        let card_y=10;
+        let card_place="position:absolute;left:"+String(card_x)+";top:"+String(card_y)+";";
+        domImg.style=card_place;
+        domCard.appendChild(domImg);
+      }
+    }
+
+    function drawRightEnemyCard(enemyLength){
+      var domCard=document.getElementById('right_field');
+      while(domCard.firstChild){
+        domCard.removeChild(domCard.firstChild);
+      }
+      for(let i=0;i<enemyLength;i++){
+        var domImg=document.createElement('img');
+        domImg.src='./load/images/enemy_side.png';
+        let space=(400-70)/enemyLength;
+        let card_x=690;
+        let card_y=120+space*i;
+        let card_place="position:absolute;left:"+String(card_x)+";top:"+String(card_y)+";";
+        domImg.style=card_place;
+        domCard.appendChild(domImg);
+      }
+    }
+
+
+    start();
+  </script>
+</body>
+</html>

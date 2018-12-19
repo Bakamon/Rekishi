@@ -1,0 +1,578 @@
+exports.host=1337;
+exports.port='192';
+
+//１：発明、２：文化、３：戦争
+
+var card_list=[];
+var century1=[];
+var century2=[];
+var century3=[];
+var century4=[];
+var century5=[];
+var century6=[];
+var century7=[];
+var century8=[];
+var century9=[];
+var century10=[];
+var century11=[];
+var century12=[];
+var century13=[];
+var century14=[];
+var century15=[];
+var century16=[];
+var century17=[];
+var century18=[];
+var century19=[];
+var century20=[];
+
+//century3.push(
+  //{name:"",type:,era:"",text:""}
+//);
+
+century1.push(
+  {name:"中国に仏教",type:0,era:"67年",text:""}
+);
+century1.push(
+  {name:"ローマにコロッセウム",type:0,era:"80年",text:""}
+);
+century1.push(
+  {name:"後漢の建国",type:0,era:"25年",text:""}
+);
+century1.push(
+  {name:"ローマ五賢帝時代",type:0,era:"96年~180年",text:""}
+);
+
+century2.push(
+  {name:"紙の改良",type:1,era:"105年",text:""}
+);
+century2.push(
+  {name:"黄巾の乱",type:0,era:"184年",text:""}
+);
+century2.push(
+  {name:"ハドリアヌスの長城",type:0,era:"122年",text:""}
+);
+century2.push(
+  {name:"ティオティワカン",type:0,era:"2世紀~6世紀",text:""}
+);
+
+century3.push(
+  {name:"赤壁の戦い",type:3,era:"208年",text:""}
+);
+century3.push(
+  {name:"万民法（アントニヌス法）",type:0,era:"212年",text:""}
+);
+century3.push(
+  {name:"魏・呉・蜀の三国分立",type:0,era:"220年",text:""}
+);
+century3.push(
+  {name:"ササン朝ペルシア成立",type:0,era:"226年~651年",text:""}
+);
+century3.push(
+  {name:"普の中国統一",type:0,era:"280年~316年",text:""}
+);
+century3.push(
+  {name:"帝国四分治",type:0,era:"284年",text:""}
+);
+
+century4.push(
+  {name:"ミラノの勅令",type:0,era:"313年",text:""}
+);
+century4.push(
+  {name:"ニケーア公会議",type:0,era:"325年",text:""}
+);
+century4.push(
+  {name:"朝鮮に高句麗・百済・新羅",type:0,era:"350年",text:""}
+);
+century4.push(
+  {name:"ゲルマン民族の大移動が始まる",type:0,era:"375年",text:""}
+);
+century4.push(
+  {name:"ローマ帝国がキリスト教を国教にする",type:0,era:"392年",text:""}
+);
+century4.push(
+  {name:"ローマ帝国が東西に分裂",type:0,era:"395年",text:""}
+);
+
+century5.push(
+  {name:"宋の成立（南朝）",type:0,era:"420年~479年",text:""}
+);
+century5.push(
+  {name:"北魏が華北を統一（北朝）",type:0,era:"439年",text:""}
+);
+century5.push(
+  {name:"西ローマ帝国滅亡",type:0,era:"476年",text:""}
+);
+century5.push(
+  {name:"孝文帝が均田制を実施",type:0,era:"485年",text:""}
+);
+century5.push(
+  {name:"フランク王国建国",type:0,era:"486年",text:""}
+);
+
+century6.push(
+  {name:"東ローマ皇帝ユスティアヌス大帝",type:0,era:"527年~565年",text:""}
+);
+century6.push(
+  {name:"ローマ法大全",type:0,era:"533年",text:""}
+);
+century6.push(
+  {name:"ハギア＝ソフィア聖堂",type:2,era:"537年",text:""}
+);
+century6.push(
+  {name:"マホメットの誕生",type:0,era:"570年頃~632年",text:""}
+);
+century6.push(
+  {name:"楊堅が隋を建国",type:0,era:"581年",text:""}
+);
+century6.push(
+  {name:"隋が中国を統一",type:0,era:"589年~618年",text:""}
+);
+
+century7.push(
+  {name:"煬帝が即位",type:0,era:"604年~618年",text:""}
+);
+century7.push(
+  {name:"煬帝が大運河を開く",type:0,era:"605年",text:""}
+);
+century7.push(
+  {name:"マホメットのイスラム教成立",type:0,era:"610年",text:""}
+);
+century7.push(
+  {name:"唐が中国統一",type:0,era:"618年~907年",text:""}
+);
+century7.push(
+  {name:"マホメットがメジナに逃れる",type:0,era:"622年",text:""}
+);
+century7.push(
+  {name:"唐の太宗が即位",type:0,era:"626年",text:""}
+);
+century7.push(
+  {name:"マホメットがアラブを征服",type:0,era:"630年~651年",text:""}
+);
+century7.push(
+  {name:"ウマイヤ朝（サラセン帝国）成立",type:0,era:"661年~750年",text:""}
+);
+century7.push(
+  {name:"百済が唐に滅ばされる",type:0,era:"663年",text:""}
+);
+century7.push(
+  {name:"高句麗が唐に滅ぼされる",type:0,era:"668年",text:""}
+);
+century7.push(
+  {name:"新羅が朝鮮半島を統一",type:0,era:"676年",text:""}
+);
+
+century8.push(
+  {name:"サラセン文化がヨーロッパに広まる",type:0,era:"711年",text:""}
+);
+century8.push(
+  {name:"唐の玄宗が即位",type:0,era:"712年",text:""}
+);
+century8.push(
+  {name:"渤海が建国",type:0,era:"713年",text:""}
+);
+century8.push(
+  {name:"レオ３世の偶像崇拝禁止令",type:0,era:"726年",text:""}
+);
+century8.push(
+  {name:"サラセン帝国にアッバース朝",type:0,era:"750年",text:""}
+);
+century8.push(
+  {name:"中国の製紙法が西方へ",type:0,era:"751年",text:""}
+);
+century8.push(
+  {name:"安史の乱",type:0,era:"755年~763年",text:""}
+);
+century8.push(
+  {name:"カール大帝",type:0,era:"768年~814年",text:""}
+);
+century8.push(
+  {name:"カール大帝がロンバルド三国を征服",type:0,era:"774年",text:""}
+);
+century8.push(
+  {name:"唐で両税法を施行",type:0,era:"780年",text:""}
+);
+century8.push(
+  {name:"ハールーン・アッ＝ラシード",type:0,era:"786年~809年",text:""}
+);
+
+century9.push(
+  {name:"ベルダン条約",type:0,era:"843年",text:""}
+);
+century9.push(
+  {name:"ノヴゴロド王国建設",type:0,era:"862年",text:""}
+);
+century9.push(
+  {name:"メルセン条約",type:0,era:"870年",text:""}
+);
+century9.push(
+  {name:"黄巣の乱",type:0,era:"875年",text:""}
+);
+
+century10.push(
+  {name:"五大十国時代",type:0,era:"907年~960年",text:""}
+);
+century10.push(
+  {name:"朝鮮に高麗起こる",type:0,era:"918年",text:""}
+);
+century10.push(
+  {name:"渤海が滅ぶ",type:0,era:"927年",text:""}
+);
+century10.push(
+  {name:"新羅が滅び、高麗が統一",type:0,era:"935年",text:""}
+);
+century10.push(
+  {name:"宋（北宋）成立",type:0,era:"960年~1127年",text:""}
+);
+century10.push(
+  {name:"神聖ローマ帝国、オットー即位",type:0,era:"967年~973年",text:""}
+);
+century10.push(
+  {name:"フランスにカペー朝が起こる",type:0,era:"987年",text:""}
+);
+
+century11.push(
+  {name:"李朝大越国、成立",type:0,era:"1010年~1225年",text:""}
+);
+century11.push(
+  {name:"ペルシアにセルジューク朝、成立",type:0,era:"1038年~1157年",text:""}
+);
+century11.push(
+  {name:"ギリシア・ローマの両協会が完全に分裂",type:0,era:"1054年",text:""}
+);
+century11.push(
+  {name:"ノルマンジーがイングランドを征服",type:0,era:"1066年",text:""}
+);
+century11.push(
+  {name:"王安石の改革",type:0,era:"1069年",text:""}
+);
+century11.push(
+  {name:"カノッサの屈辱",type:0,era:"1077年",text:""}
+);
+century11.push(
+  {name:"第１回十字軍を派遣",type:0,era:"1096年~1099年",text:""}
+);
+century11.push(
+  {name:"十字軍がエルサレムを建てる",type:0,era:"1099年",text:""}
+);
+
+century12.push(
+  {name:"中国東北部に金が建国",type:0,era:"1115年",text:""}
+);
+century12.push(
+  {name:"金が遼を滅ぼす",type:0,era:"1125年",text:""}
+);
+century12.push(
+  {name:"宋が金の侵攻で南渡（南宋）",type:0,era:"1127年~1279年",text:""}
+);
+century12.push(
+  {name:"イタリアにナポリ王国が成立",type:0,era:"1130年",text:""}
+);
+century12.push(
+  {name:"紹興の和議",type:0,era:"1142年",text:""}
+);
+century12.push(
+  {name:"ポルトガルが成立",type:0,era:"1143年",text:""}
+);
+century12.push(
+  {name:"第２回十字軍",type:0,era:"1147年~1149年",text:""}
+);
+century12.push(
+  {name:"アンコール・ワット建設",type:0,era:"1150年頃",text:""}
+);
+century12.push(
+  {name:"エルサレム王国が滅ぶ",type:0,era:"1187年",text:""}
+);
+century12.push(
+  {name:"第３回十字軍遠征",type:0,era:"1189年",text:""}
+);
+century12.push(
+  {name:"ドイツ騎士団が生まれる",type:0,era:"1190年",text:""}
+);
+century12.push(
+  {name:"イスラム教徒がスペインを占領",type:0,era:"1195年",text:""}
+);
+
+//メモの内一部
+
+century13.push(
+  {name:"第４回十字軍遠征",type:0,era:"1202年~1204年",text:""}
+);
+century13.push(
+  {name:"奴隷王朝が成立",type:0,era:"1206年=1290年",text:""}
+);
+century13.push(
+  {name:"モンゴル帝国のチンギス・ハンが即位",type:0,era:"1206年",text:""}
+);
+century13.push(
+  {name:"第５回十字軍遠征",type:0,era:"1228年",text:""}
+);
+century13.push(
+  {name:"モンゴル帝国が金を滅ぼす",type:0,era:"1234年",text:""}
+);
+century13.push(
+  {name:"マグナ・カルタがジョン王により制定",type:0,era:"1215年",text:""}
+);
+century13.push(
+  {name:"モンゴル帝国が南ロシアを征服",type:0,era:"1224年",text:""}
+);
+century13.push(
+  {name:"ワールシュタットの戦い",type:3,era:"1241年",text:""}
+);
+century13.push(
+  {name:"ドイツにハンザ同盟が成立",type:0,era:"1241年",text:""}
+);
+century13.push(
+  {name:"ドイツにハンザ同盟が成立",type:0,era:"1248年",text:""}
+);
+
+century14.push(
+  {name:"フィリップ４世が三部会を招集",type:0,era:"1302年",text:""}
+);
+century14.push(
+  {name:"アナーニ事件",type:0,era:"1303年",text:""}
+);
+century14.push(
+  {name:"教皇のバビロン捕囚",type:0,era:"1309年",text:""}
+);
+century14.push(
+  {name:"ドイツで火薬が発明される",type:1,era:"1313年",text:""}
+);
+century14.push(
+  {name:"ダンテの「神曲」",type:2,era:"1313年",text:""}
+);
+century14.push(
+  {name:"イタリアにルネッサンスが始まる",type:2,era:"1313年",text:""}
+);
+century14.push(
+  {name:"アルハンブラ宮殿",type:0,era:"1333年",text:""}
+);
+century14.push(
+  {name:"百年戦争始まる",type:3,era:"1339年~1453年",text:""}
+);
+century14.push(
+  {name:"ペストが流行",type:0,era:"1347年~1350年",text:""}
+);
+
+century15.push(
+  {name:"アンゴラの戦い",type:3,era:"1402年",text:""}
+);
+century15.push(
+  {name:"明の永楽帝、即位",type:0,era:"1402年",text:""}
+);
+century15.push(
+  {name:"コンスタンツ公会議",type:0,era:"1414年~1418年",text:""}
+);
+century15.push(
+  {name:"フス戦争始まる",type:3,era:"1419年~1436年",text:""}
+);
+century15.push(
+  {name:"ジャンヌダルクがオルレアンの包囲を破る",type:0,era:"1429年",text:""}
+);
+century15.push(
+  {name:"活版印刷術の発明",type:1,era:"1450年",text:""}
+);
+century15.push(
+  {name:"オスマン・トルコが東ローマを滅ぼす",type:0,era:"1453年",text:""}
+);
+century15.push(
+  {name:"イギリスでばら戦争",type:3,era:"1455年~1485年",text:""}
+);
+century15.push(
+  {name:"モスクワ大公国独立",type:0,era:"1480年",text:""}
+);
+
+century16.push(
+  {name:"セント・ピーター寺院が完成",type:0,era:"1506年",text:""}
+);
+century16.push(
+  {name:"ポルトガルがインドのゴアを占領",type:0,era:"1510年",text:""}
+);
+century16.push(
+  {name:"宗教改革",type:0,era:"1517年",text:""}
+);
+century16.push(
+  {name:"マゼラン艦隊が世界一周",type:0,era:"1519年~1522年",text:""}
+);
+century16.push(
+  {name:"ドイツ農民戦争",type:3,era:"1524年~1525年",text:""}
+);
+century16.push(
+  {name:"インドにムガル帝国、成立",type:0,era:"1526年~1858年",text:""}
+);
+century16.push(
+  {name:"インカ帝国、滅亡",type:0,era:"1533年",text:""}
+);
+century16.push(
+  {name:"イエズス会創設",type:0,era:"1534年",text:""}
+);
+century16.push(
+  {name:"イギリス国教会を創設",type:0,era:"1534年",text:""}
+);
+
+century17.push(
+  {name:"オランダが東インド会社を設立",type:0,era:"1602年",text:""}
+);
+century17.push(
+  {name:"フランスが東インド会社を設立",type:0,era:"1604年",text:""}
+);
+century17.push(
+  {name:"天体望遠鏡を発明",type:1,era:"1609年",text:""}
+);
+century17.push(
+  {name:"天体の三法則を発見",type:1,era:"1609年",text:""}
+);
+century17.push(
+  {name:"清、成立",type:0,era:"1616年=1912年",text:""}
+);
+century17.push(
+  {name:"三十年戦争が始まる",type:3,era:"1618年~1648年",text:""}
+);
+century17.push(
+  {name:"清教徒、メイフラワー号で北米に移住",type:0,era:"1620年",text:""}
+);
+century17.push(
+  {name:"オランダが西インド会社を設立",type:0,era:"1621年",text:""}
+);
+century17.push(
+  {name:"オランダが台湾を占領",type:0,era:"1624年~1661年",text:""}
+);
+century17.push(
+  {name:"李自成の乱",type:0,era:"1631年",text:""}
+);
+
+century18.push(
+  {name:"スペイン継承戦争",type:3,era:"1701年~1713年",text:""}
+);
+century18.push(
+  {name:"大ブリテン王国、成立",type:0,era:"1707年",text:""}
+);
+century18.push(
+  {name:"清で「康煕字典」が完成",type:0,era:"1710年",text:""}
+);
+century18.push(
+  {name:"ユトレヒト条約",type:0,era:"1713年",text:""}
+);
+century18.push(
+  {name:"ハノーバー朝が始まる",type:0,era:"1714年",text:""}
+);
+century18.push(
+  {name:"ラシュタット条約",type:0,era:"1714年",text:""}
+);
+century18.push(
+  {name:"広東に公行創設",type:0,era:"1720年",text:""}
+);
+century18.push(
+  {name:"スウィフトの「ガリバー旅行記」",type:0,era:"1726年",text:""}
+);
+century18.push(
+  {name:"キャフタ条約",type:0,era:"1727年",text:""}
+);
+century18.push(
+  {name:"清がチベットを征服",type:0,era:"1726年",text:""}
+);
+
+century19.push(
+  {name:"ナポレオン皇帝が即位",type:0,era:"1804年",text:""}
+);
+century19.push(
+  {name:"神聖ローマ帝国滅亡",type:0,era:"1806年",text:""}
+);
+century19.push(
+  {name:"ティルジット条約",type:0,era:"1807年",text:""}
+);
+century19.push(
+  {name:"ナポレオンのロシア遠征",type:3,era:"1812年",text:""}
+);
+century19.push(
+  {name:"ライプチヒの戦",type:3,era:"1813年",text:""}
+);
+century19.push(
+  {name:"蒸気機関車を発明",type:1,era:"1814年",text:""}
+);
+century19.push(
+  {name:"ウィーン会議開催",type:0,era:"1814年=1815年",text:""}
+);
+century19.push(
+  {name:"ワーテルローの戦",type:3,era:"1815年",text:""}
+);
+century19.push(
+  {name:"神聖同盟が成立",type:0,era:"1815年",text:""}
+);
+century19.push(
+  {name:"イギリスがシンガポールを占領",type:0,era:"1819年",text:""}
+);
+century19.push(
+  {name:"モンロー宣言",type:0,era:"1823年",text:""}
+);
+
+century20.push(
+  {name:"第１回ノーベル賞",type:0,era:"1901年",text:""}
+);
+century20.push(
+  {name:"ロシアが満州を占領",type:0,era:"1903年",text:""}
+);
+century20.push(
+  {name:"ライト兄弟が飛行機を発明",type:1,era:"1903年",text:""}
+);
+century20.push(
+  {name:"日露戦争",type:3,era:"1904年~1905年",text:""}
+);
+century20.push(
+  {name:"血の日曜日事件",type:0,era:"1905年",text:""}
+);
+century20.push(
+  {name:"孫文らが中国革命同盟会を結成",type:0,era:"1905年",text:""}
+);
+century20.push(
+  {name:"ポーツマス条約",type:0,era:"1905年",text:""}
+);
+century20.push(
+  {name:"ベンガル分割令",type:0,era:"1905年",text:""}
+);
+century20.push(
+  {name:"三国協商が成立",type:0,era:"1907年",text:""}
+);
+century20.push(
+  {name:"アメリカで日本移民制限法が成立",type:0,era:"1907年",text:""}
+);
+century20.push(
+  {name:"辛亥革命",type:0,era:"1911年",text:""}
+);
+century20.push(
+  {name:"アムンゼンが南極を探検",type:0,era:"1911年",text:""}
+);
+century20.push(
+  {name:"中華民国、成立",type:0,era:"1912年",text:""}
+);
+
+
+
+century10.push(
+  {name:"",type:0,era:"年",text:""}
+);
+
+card_list.push(century1);
+card_list.push(century2);
+card_list.push(century3);
+card_list.push(century4);
+card_list.push(century5);
+card_list.push(century6);
+card_list.push(century7);
+card_list.push(century8);
+card_list.push(century9);
+card_list.push(century10);
+card_list.push(century11);
+card_list.push(century12);
+card_list.push(century13);
+card_list.push(century14);
+card_list.push(century15);
+card_list.push(century16);
+card_list.push(century17);
+card_list.push(century18);
+card_list.push(century19);
+card_list.push(century20);
+
+
+
+exports.list=card_list;
