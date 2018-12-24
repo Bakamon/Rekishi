@@ -24,6 +24,21 @@ var server=require("http").createServer(function(req,res){
       var output=fs.readFileSync("./load/images/mycard.png");
       res.end(output);
       break;
+    case '/load/images/mycard_1.png':
+      res.writeHead(200,{"Content-Type":"image/png"});
+      var output=fs.readFileSync("./load/images/mycard_1.png");
+      res.end(output);
+      break;
+    case '/load/images/mycard_2.png':
+      res.writeHead(200,{"Content-Type":"image/png"});
+      var output=fs.readFileSync("./load/images/mycard_2.png");
+      res.end(output);
+      break;
+    case '/load/images/mycard_3.png':
+      res.writeHead(200,{"Content-Type":"image/png"});
+      var output=fs.readFileSync("./load/images/mycard_3.png");
+      res.end(output);
+      break;
     case '/load/images/enemy_front.png':
       res.writeHead(200,{"Content-Type":"image/png"});
       var output=fs.readFileSync("./load/images/enemy_front.png");
@@ -44,10 +59,10 @@ var server=require("http").createServer(function(req,res){
 var io=require("socket.io").listen(server);
 
 var userHash={};
+var userOrder=[];
 
 var kartoj=[];
 var userKartoj={};
-var playUser=[];
 
 io.sockets.on("connection",function(socket){
 
@@ -87,10 +102,11 @@ io.sockets.on("connection",function(socket){
 
   socket.on("start_game",function(){
     let user_num=Object.keys(userHash).length;
-    setPlayUser();
+    setUserOrder();
     selectEra();
     dealKartoj();
     pushEnemyCardNum();
+    pushMyCard();
     if(user_num==4){
       io.sockets.emit("start_game");
     }
@@ -125,28 +141,40 @@ io.sockets.on("connection",function(socket){
     io.sockets.emit("u_hash",{value:uHash});
   }
 
-  function setPlayUser(){
+  function setUserOrder(){
+    userOrder=[];
     for(let i in userHash){
-      playUser.push(i);
-    }
-    for(let i=0;i<4;i++){
-      console.log(playUser[i]);
+      userOrder.push(i);
     }
   }
 
   function pushEnemyCardNum(){
-    for(let i in userHash){
+    for(let i=0;i<userOrder.length;i++){
+      let myId=userOrder[i];
       let enemyAry=[];
-      for(let j in userHash){
-        if(i!=j){
-          let enemyName=userHash[j];
-          let enemyCardHash={};
-          enemyCardHash["name"]=userHash[j];
-          enemyCardHash["num"]=userKartoj[j].length;
-          enemyAry.push(enemyCardHash);
+      let me=0;
+      while(me<2){
+        for(let j=0;j<userOrder.length;j++){
+          let eneId=userOrder[j];
+          if(i==j){
+            me+=1;
+          }else if(me==1){
+            let enemyName=userHash[eneId];
+            let enemyCardHash={};
+            enemyCardHash["name"]=userHash[eneId];
+            enemyCardHash["num"]=userKartoj[eneId].length;
+            enemyAry.push(enemyCardHash);
+          }
         }
       }
-      io.to(i).emit("enemyUserInfo",{value:enemyAry});
+      io.to(myId).emit("enemyUserInfo",{value:enemyAry});
+    }
+  }
+
+  function pushMyCard(){
+    for(let i in userHash){
+      let kartoj=userKartoj[i];
+      io.to(i).emit("myKartoj",{value:kartoj});
     }
   }
 
@@ -157,7 +185,7 @@ io.sockets.on("connection",function(socket){
       fisherYates(card_list.list[i]);
       for(let j=0;j<4;j++){
         let card=card_list.list[i][j];
-        card.num=i;
+        card.num=i+1;
         card.id=countKartoj;
         kartoj.push(card);
         countKartoj++;

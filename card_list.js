@@ -548,9 +548,9 @@ century20.push(
 
 
 
-century10.push(
-  {name:"",type:0,era:"年",text:""}
-);
+//century10.push(
+  //{name:"",type:0,era:"年",text:""}
+//);
 
 card_list.push(century1);
 card_list.push(century2);
