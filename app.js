@@ -63,6 +63,19 @@ var userOrder=[];
 
 var kartoj=[];
 var userKartoj={};
+var usedKartoj=[];
+
+var turnKartoj={};
+var turnCount=0;
+var whoTurn;
+
+var outKartojNum=0;
+var GAME_STATE={
+  game_start:"GAME_START",
+  game_play:"GAME_PLAY"
+};
+var gameState=GAME_STATE["game_start"];
+
 
 io.sockets.on("connection",function(socket){
 
@@ -102,13 +115,25 @@ io.sockets.on("connection",function(socket){
 
   socket.on("start_game",function(){
     let user_num=Object.keys(userHash).length;
+    outKartojNum=1;
+    gameState=GAME_STATE["game_start"];
     setUserOrder();
     selectEra();
     dealKartoj();
     pushEnemyCardNum();
     pushMyCard();
+    io.sockets.emit("out_kartoj_num",{value:outKartojNum});
     if(user_num==4){
       io.sockets.emit("start_game");
+    }
+  });
+
+  socket.on("push_my_card",function(cardAry){
+    if(cardAry.length!=outKartojNum){
+      return 0;
+    }
+    if(gameState==GAME_STATE["game_start"]){
+      taskOfOrder(cardAry);
     }
   });
 
@@ -124,6 +149,53 @@ io.sockets.on("connection",function(socket){
       emitMember();
     }
   });
+
+  function searchKartoj(id){
+    for(let i=0;i<kartoj.length;i++){
+      if(kartoj[i].id==id){
+        return kartoj[i];
+      }
+    }
+    return 0;
+  }
+
+  //////
+  function usedKarto(kartoId,userId){
+    let index;
+    for(index=0;index<userKartoj[userId].length;index++){
+      if(userKartoj[userId][index].id==kartoId){
+        break;
+      }
+    }
+    usedKartoj.push(userKartoj[userId][index]);
+    userKartoj[userId].splice(index,1);
+  }
+
+  function turnCount(turn){
+    let message;
+    turnCount=turn;
+    whoTurn=userOrder[turnCount];
+    for(let id in userHash){
+      if(id==whoTurn){
+        message="あなたの番です。カードを出してください。";
+        io.to(id).emit("operation_push",{value:true});
+        if(outKartojNum!=0){
+          io.to(id).emit("pass_able",{value:false});
+        }else{
+          io.to(id).emit("pass_able",{value:false});
+        }
+      }else{
+        message=String(userHash[whoTurn])+"の番です。";
+        io.to(id).emit("operation_push",{value:false});
+      }
+      io.to(id).emit("display_message",{value:message});
+    }
+
+    turnCount+=1;
+    if(turnCount>userOrder.length){
+      turnCount=0;
+    }
+  }
 
   function emitEntryNum(){
     let user_num=Object.keys(userHash).length;
@@ -145,6 +217,66 @@ io.sockets.on("connection",function(socket){
     userOrder=[];
     for(let i in userHash){
       userOrder.push(i);
+    }
+  }
+
+  function taskOfOrder(cardAry){
+    turnKartoj[socket.id]=cardAry[0];
+    usedKarto(cardAry[0],socket.id);
+    pushMyCard();
+    io.to(socket.id).emit("operation_push",{value:false});
+
+    if(Object.keys(turnKartoj).length==4){
+      userOrder=[];
+      for(let index in turnKartoj){
+        let cardId=turnKartoj[index];
+        let karto=searchKartoj(cardId).id;
+        let orderLength=userOrder.length;
+        if(userOrder.length==0){
+          userOrder.push(index);
+          continue;
+        }
+        for(let i=0;i<orderLength;i++){
+          let index2=userOrder[i];
+          let cardId2=turnKartoj[index2];
+          let karto2=searchKartoj(cardId2).id;
+          if(karto>karto2){
+            userOrder.splice(i,0,index);
+            break;
+          }else if(karto==karto2){
+            if(Math.random()%2==0){
+              userOrder.splice(i,0,index);
+            }else{
+              userOrder.splice(i+1,0,index);
+            }
+            break;
+          }else if(i==orderLength-1){
+            userOrder.push(index);
+          }
+        }
+      }
+      io.sockets.emit("touch_able_kartoj",{value:false});
+      io.sockets.emit("display_message",{value:"順番が決まりました"});
+      pushEnemyCardNum();
+      for(let i=0;i<userOrder.length;i++){
+        let index=userOrder.length-(1+i);
+        let userId=userOrder[index];
+        let waitTime=1500*(i)+1000;
+        let karto=searchKartoj(turnKartoj[userId]);
+        let message=String(userHash[userId])+"が"+String(userOrder.length-i)+"番目です";
+        setTimeout(function(){
+          io.sockets.emit("kartoj_info",{value:karto});
+          io.sockets.emit("display_message",{value:message});
+        },waitTime);
+      }
+      setTimeout(function(){
+        io.sockets.emit("touch_able_kartoj",{value:true});
+        gameState=GAME_STATE["game_play"];
+        outKartojNum=0;
+        io.sockets.emit("out_kartoj_num",{value:outKartojNum});
+        turnCount(0);
+      },7000)
+
     }
   }
 
@@ -211,8 +343,5 @@ io.sockets.on("connection",function(socket){
       userCount++;
     }
   }
-
-
-
 
 });
