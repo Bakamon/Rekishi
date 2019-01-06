@@ -57,7 +57,8 @@
       <button id="push_kartoj_button" style="position:absolute;left:300px;top:350px;width:200px;display:block;" onclick="pushCardButton()">
         カードを出す
       </button>
-      <button id="pass_button" style="position:absolute;left:550px;top:370px;width:100px;display:none;">パス</button>
+      <button id="pass_button" style="position:absolute;left:550px;top:370px;width:100px;display:none;"
+       onclick="pushPassButton()">パス</button>
 
       <div style="position:absolute;left:830px;top:50px;width:400px;padding: 10px; margin-bottom: 10px;
        border:1px solid #333333; border-radius: 10px;" id="text_field">
@@ -246,9 +247,13 @@
       console.log(boolEqualValue);
       if (selectCardNum==outKartojNum){
         socketio.emit("push_my_card",pushCardId);
-      }else if(outKartojNum==0){
+      }else if(outKartojNum==0 && boolEqualValue==true){
         socketio.emit("push_my_card",pushCardId);
       }
+    }
+
+    function pushPassButton(){
+      socketio.emit("push_pass");
     }
 
     function operationPush(bool){

@@ -64,9 +64,10 @@ var userOrder=[];
 var kartoj=[];
 var userKartoj={};
 var usedKartoj=[];
+var tableKartoj=[];
 
 var turnKartoj={};
-var turnCount=0;
+var turnCounter=0;
 var whoTurn;
 
 var outKartojNum=0;
@@ -129,11 +130,28 @@ io.sockets.on("connection",function(socket){
   });
 
   socket.on("push_my_card",function(cardAry){
-    if(cardAry.length!=outKartojNum){
+    if(outKartojNum==0){
+      ;
+    }
+    else if(cardAry.length!=outKartojNum){
       return 0;
     }
     if(gameState==GAME_STATE["game_start"]){
       taskOfOrder(cardAry);
+    }else if(gameState==GAME_STATE["game_play"]){
+      taskPushKartoj(cardAry);
+    }
+  });
+
+  socket.on("push_pass",function(){
+    let beforeCounter=turnCounter-1;
+    if(beforeCounter<0){
+      beforeCounter=userOrder.length-1;
+    }
+    if(gameState==GAME_STATE["game_play"]){
+      if(socket.id==userOrder[beforeCounter]&&outKartojNum!=0){
+        turnCount(turnCounter);
+      }
     }
   });
 
@@ -173,27 +191,28 @@ io.sockets.on("connection",function(socket){
 
   function turnCount(turn){
     let message;
-    turnCount=turn;
-    whoTurn=userOrder[turnCount];
+    turnCounter=turn;
+    whoTurn=userOrder[turnCounter];
     for(let id in userHash){
       if(id==whoTurn){
         message="あなたの番です。カードを出してください。";
         io.to(id).emit("operation_push",{value:true});
         if(outKartojNum!=0){
-          io.to(id).emit("pass_able",{value:false});
+          io.to(id).emit("pass_able",{value:true});
         }else{
           io.to(id).emit("pass_able",{value:false});
         }
       }else{
         message=String(userHash[whoTurn])+"の番です。";
         io.to(id).emit("operation_push",{value:false});
+        io.to(id).emit("pass_able",{value:false});
       }
       io.to(id).emit("display_message",{value:message});
     }
 
-    turnCount+=1;
-    if(turnCount>userOrder.length){
-      turnCount=0;
+    turnCounter+=1;
+    if(turnCounter>userOrder.length-1){
+      turnCounter=0;
     }
   }
 
@@ -278,6 +297,30 @@ io.sockets.on("connection",function(socket){
       },7000)
 
     }
+  }
+
+  function taskPushKartoj(cardAry){
+    if(Object.keys(tableKartoj).length!=0){
+      let kartoNum=searchKartoj(cardAry[0]).num;
+      let lastKartoj=tableKartoj.slice(-1)[0];
+      let lastNum=searchKartoj(lastKartoj[0]).num;
+      if(kartoNum<=lastNum){
+        return 0;
+      }
+    }
+    tableKartoj.push(cardAry);
+    for(let i=0;i<cardAry.length;i++){
+      usedKarto(cardAry[i],socket.id);
+    }
+    pushMyCard();
+    io.to(socket.id).emit("operation_push",{value:false});
+    pushEnemyCardNum();
+    if(tableKartoj.length!=0){
+      lastKartoj=tableKartoj.slice(-1)[0];
+      outKartojNum=lastKartoj.length;
+    }
+    turnCount(turnCounter);
+    io.sockets.emit("out_kartoj_num",{value:outKartojNum});
   }
 
   function pushEnemyCardNum(){
