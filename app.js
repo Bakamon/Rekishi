@@ -69,6 +69,7 @@ var tableKartoj=[];
 var turnKartoj={};
 var turnCounter=0;
 var whoTurn;
+var lastPushPlayer;
 
 var outKartojNum=0;
 var GAME_STATE={
@@ -192,7 +193,8 @@ io.sockets.on("connection",function(socket){
   function turnCount(turn){
     let message;
     turnCounter=turn;
-    whoTurn=userOrder[turnCounter];
+    whoTurn=userOrder[turnCounter]
+    returnMyKartoj(nowPlayer());
     for(let id in userHash){
       if(id==whoTurn){
         message="あなたの番です。カードを出してください。";
@@ -214,6 +216,37 @@ io.sockets.on("connection",function(socket){
     if(turnCounter>userOrder.length-1){
       turnCounter=0;
     }
+
+    if(userKartoj[nowPlayer()].length==0){
+      console.log(whoTurn);
+      console.log(userKartoj[whoTurn]);
+      turnCount(turnCounter);
+    }
+  }
+
+  function nowPlayer(){
+    let nowTurn;
+    if(turnCounter==0){
+      nowTurn=userOrder[userOrder.length-1];
+    }else{
+      nowTurn=userOrder[turnCounter-1];
+    }
+    return nowTurn;
+  }
+
+  function returnMyKartoj(id){
+    if(lastPushPlayer!=id){
+      return;
+    }
+    for(let i=0;i<tableKartoj.length;i++){
+      for(let j=0;j<tableKartoj[i].length;j++){
+        usedKartoj.push(tableKartoj[i][j]);
+      }
+    }
+    tableKartoj=[];
+    outKartojNum=0;
+    io.sockets.emit("out_kartoj_num",{value:outKartojNum});
+    pushTableCard();
   }
 
   function emitEntryNum(){
@@ -315,11 +348,13 @@ io.sockets.on("connection",function(socket){
     pushMyCard();
     io.to(socket.id).emit("operation_push",{value:false});
     pushEnemyCardNum();
+    pushTableCard();
     if(tableKartoj.length!=0){
       lastKartoj=tableKartoj.slice(-1)[0];
       outKartojNum=lastKartoj.length;
     }
     turnCount(turnCounter);
+    lastPushPlayer=socket.id;
     io.sockets.emit("out_kartoj_num",{value:outKartojNum});
   }
 
@@ -351,6 +386,21 @@ io.sockets.on("connection",function(socket){
       let kartoj=userKartoj[i];
       io.to(i).emit("myKartoj",{value:kartoj});
     }
+  }
+
+  function pushTableCard(){
+    let pushTableInfo=[];
+    let lastTableAry;
+    if(tableKartoj.length==0){
+      io.sockets.emit("table_info",{value:pushTableInfo});
+      return;
+    }
+    lastTableAry=tableKartoj.slice(-1)[0];
+    for(let i=0;i<lastTableAry.length;i++){
+      let kartoInfo=searchKartoj(lastTableAry[i]);
+      pushTableInfo.push(kartoInfo);
+    }
+    io.sockets.emit("table_info",{value:pushTableInfo});
   }
 
   function selectEra(){

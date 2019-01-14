@@ -48,6 +48,7 @@
         <div id='right_field'></div>
         <div id='mycard_field'></div>
         <div id='center_field'></div>
+        <div id='table_field'></div>
       </div>
       <p  class="player_place" id="p1_name" style="position:absolute;left:100px;top:505px;"></p>
       <p  class="player_place" id="p2_name" style="position:absolute;left:50px;top:40px;"></p>
@@ -123,6 +124,7 @@
     socketio.on("kartoj_info",function(data){explainKartoj(data.value)});
     socketio.on("display_message",function(data){putOutText(data.value)});
     socketio.on("touch_able_kartoj",function(data){touchAbleCard(data.value)});
+    socketio.on("table_info",function(data){tableInfo(data.value)});
 
     function enterKey(func){
       if(window.event.keyCode==13){
@@ -374,6 +376,15 @@
       while(domCard.firstChild){
         domCard.removeChild(domCard.firstChild);
       }
+      for(let i=0;i<length-1;i++){
+        for(let j=length-1;j>i;j--){
+          if(kartojInfo[i].num>kartojInfo[j].num){
+            let tmp=kartojInfo[i];
+            kartojInfo[i]=kartojInfo[j];
+            kartojInfo[j]=tmp;
+          }
+        }
+      }
       for(let i=0;i<length;i++){
         let domImg=document.createElement('img');
         let domNumber=document.createElement('p');
@@ -479,6 +490,81 @@
           break;
       }
       eraDom.innerHTML=karto.era;
+    }
+
+    function tableInfo(kartojInfo){
+      let tableDom=document.getElementById("table_field");
+      let length=kartojInfo.length;
+      while(tableDom.firstChild){
+        tableDom.removeChild(tableDom.firstChild);
+      }
+      for(let i=0;i<length;i++){
+        let domImg=document.createElement("img");
+        let domNumber=document.createElement('p');
+        let space=200/length;
+        let center_add=(400-space*(length-1)+100)/2;
+        let card_x=300+space*i;
+        let card_y=200;
+        let num_y=card_y-30;
+        let card_place;
+        let num_place;
+        if(length==1){
+          card_place="position:absolute;left:"+String(350)+";top:"+String(card_y)+";";
+          num_place="position:absolute;left:"+String(350)+";top:"+String(num_y)+";";
+        }else{
+          card_place="position:absolute;left:"+String(card_x)+";top:"+String(card_y)+";";
+          num_place="position:absolute;left:"+String(card_x)+";top:"+String(num_y)+";";
+        }
+        switch(kartojInfo[i].type){
+          case 0:
+            domImg.src=card_img_0;
+            break;
+          case 1:
+            domImg.src=card_img_1;
+            break;
+          case 2:
+            domImg.src=card_img_2;
+            break;
+          case 3:
+            domImg.src=card_img_3;
+            break;
+        }
+        domNumber.style=num_place;
+        domNumber.innerHTML=kartojInfo[i].num;
+        domImg.style=card_place;
+        domImg.onclick=function(){
+          let numberDom=document.getElementById("card_number");
+          let nameDom=document.getElementById("card_name");
+          let typeDom=document.getElementById("card_type");
+          let eraDom=document.getElementById("card_era");
+          let textDom=document.getElementById("card_text");
+          if(touchAbleKartoj==false){
+            return 0;
+          }
+          numberDom.innerHTML=kartojInfo[i].num;
+          nameDom.innerHTML=kartojInfo[i].name;
+          switch(kartojInfo[i].type){
+            case 0:
+              typeDom.innerHTML="通常";
+              break;
+            case 1:
+              typeDom.innerHTML="発見";
+              break;
+            case 2:
+              typeDom.innerHTML="文化";
+              break;
+            case 3:
+              typeDom.innerHTML="戦争";
+              break;
+            default:
+              typeDom.innerHTML="おかしなデータ";
+              break;
+          }
+          eraDom.innerHTML=kartojInfo[i].era;
+        };
+        tableDom.appendChild(domImg);
+        tableDom.appendChild(domNumber);
+      }
     }
 
     function drawMyName(){
