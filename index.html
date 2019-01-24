@@ -50,10 +50,19 @@
         <div id='center_field'></div>
         <div id='table_field'></div>
       </div>
-      <p  class="player_place" id="p1_name" style="position:absolute;left:100px;top:505px;"></p>
-      <p  class="player_place" id="p2_name" style="position:absolute;left:50px;top:40px;"></p>
-      <p  class="player_place" id="p3_name" style="position:absolute;left:640px;top:20px;"></p>
-      <p  class="player_place" id="p4_name" style="position:absolute;left:700px;top:500px;"></p>
+
+      <img src="load/images/now_player.png" id="p1_img" style="position:absolute;left:80px;top:450px;display:block;">
+      <img src="load/images/now_player.png" id="p2_img" style="position:absolute;left:30px;top:10px;display:block;"
+      onclick="pushUserImg(1)">
+      <img src="load/images/now_player.png" id="p3_img" style="position:absolute;left:620px;top:10px;display:block;"
+      onclick="pushUserImg(2)">
+      <img src="load/images/now_player.png" id="p4_img" style="position:absolute;left:680px;top:450px;display:block;"
+      onclick="pushUserImg(3)">
+
+      <p  class="player_place" id="p1_name" style="position:absolute;left:100px;top:530px;"></p>
+      <p  class="player_place" id="p2_name" style="position:absolute;left:50px;top:90px;"></p>
+      <p  class="player_place" id="p3_name" style="position:absolute;left:640px;top:90px;"></p>
+      <p  class="player_place" id="p4_name" style="position:absolute;left:700px;top:530px;"></p>
 
       <button id="push_kartoj_button" style="position:absolute;left:300px;top:350px;width:200px;display:block;" onclick="pushCardButton()">
         カードを出す
@@ -61,20 +70,31 @@
       <button id="pass_button" style="position:absolute;left:550px;top:370px;width:100px;display:none;"
        onclick="pushPassButton()">パス</button>
 
+       <button id="used_button" style="position:absolute;left:120px;top:140px;width:100px;display:none;"
+        onclick="usedList()">使用済み一覧</button>
+
+        <button id="invention_button" style="position:absolute;left:580px;top:140px;width:100px;display:none;"
+        onclick="pushSelectUsed()">決定</button>
+
+        <select id="used_list" size="15" style="position:absolute;left:220px;top:140px;width:360px;display:none;">
+        </select>
+
+       <div id="effect_div" style="display:none"></div>
+
       <div style="position:absolute;left:830px;top:50px;width:400px;padding: 10px; margin-bottom: 10px;
        border:1px solid #333333; border-radius: 10px;" id="text_field">
         ここに文字を入力する
       </div>
 
-      <div style="position:absolute;left:830px;top:250px;">
+      <div style="position:absolute;left:830px;top:150px;">
         <table border="1"  style="table-layout: fixed;">
           <tr>
             <th bgcolor="#0000EE"><font color="#FFFFFF">項目</font></th>
             <th bgcolor="#0000EE"><font color="#FFFFFF">内容</font></th>
           </tr>
           <tr align="center">
-            <td bgcolor="#FFFFFF" width="100px" id="card_number">データなし</td>
-            <td bgcolor="#FFFFFF" width="300px" id="card_name">データなし</td>
+            <td bgcolor="#FFFFFF" style="width:100px;" id="card_number">データなし</td>
+            <td bgcolor="#FFFFFF" style="width:300px;" id="card_name">データなし</td>
           </tr>
           <tr align="center">
             <td bgcolor="orange">カード分類</td>
@@ -87,11 +107,21 @@
             <td bgcolor="orange" colspan="2">解説</td>
           </tr>
           <tr align="center">
-            <td bgcolor="#FFFFFF" colspan="2" id="card_text">データなし</td>
+            <td bgcolor="#FFFFFF" colspan="2" style="width:400px;" id="card_text">データなし</td>
           </tr>
         </table>
       </div>
 
+    </div>
+  </div>
+  <div id="result_page" style="display:none">
+    <div style="position:relative;left:10px;top:10px">
+      <img src="load/images/result_haikei.png">
+      <p  class="result_place" style="position:absolute;left:200px;top:100px;">ゲーム終了！！結果！！</p>
+      <p  class="result_place" id="result_1" style="position:absolute;left:300px;top:200px;"></p>
+      <p  class="result_place" id="result_2" style="position:absolute;left:300px;top:250px;"></p>
+      <p  class="result_place" id="result_3" style="position:absolute;left:300px;top:300px;"></p>
+      <p  class="result_place" id="result_4" style="position:absolute;left:300px;top:350px;"></p>
     </div>
   </div>
   <script src="/socket.io/socket.io.js"></script>
@@ -103,11 +133,18 @@
     var outKartojNum;
     var outAbleKartoj=false;
     var touchAbleKartoj=true;
+    var whichEffect=0;
+
+    var usedKartoj=[];
+    var selectUsedId=100;
 
     var card_img_0='./load/images/mycard.png';
     var card_img_1='./load/images/mycard_1.png';
     var card_img_2='./load/images/mycard_2.png';
     var card_img_3='./load/images/mycard_3.png';
+
+    var player_img_0='./load/images/now_player.png';
+    var player_img_1='./load/images/else_player.png';
 
     socketio.on("hello_world",function(data){});
     socketio.on("entry_num",function(data){updateEntryNum(data.value)});
@@ -125,6 +162,14 @@
     socketio.on("display_message",function(data){putOutText(data.value)});
     socketio.on("touch_able_kartoj",function(data){touchAbleCard(data.value)});
     socketio.on("table_info",function(data){tableInfo(data.value)});
+    socketio.on("who_turn_img",function(data){whoTurnImg(data.value)});
+    socketio.on("display_who_img",function(data){displayWhoImg(data.value)});
+    socketio.on("display_who_light",function(data){displayWhoLight(data.value)});
+    socketio.on("used_info",function(data){usedInfo(data.value)});
+    socketio.on("used_bool",function(data){usedDisplay(data.value)});
+    socketio.on("effect_ary",function(data){effectButton(data.value)});
+    socketio.on("which_effect",function(data){whichEffectReceive(data.value)});
+    socketio.on("finish_player",function(data){finishGame(data.value)});
 
     function enterKey(func){
       if(window.event.keyCode==13){
@@ -141,6 +186,7 @@
       pageHash["title_page"]=document.getElementById("title_page");
       pageHash["chat_page"]=document.getElementById("chat_page");
       pageHash["game_page"]=document.getElementById("game_page");
+      pageHash["result_page"]=document.getElementById("result_page");
       let pageLength=Object.keys(pageHash).length;
       for(let pg in pageHash){
         if(pg==page){
@@ -222,18 +268,28 @@
       outAbleKartoj=true;
     }
 
-    //////////////////////////
     function pushCardButton(){
       let selectCardNum=0;
       let pushCardId=[];
       let boolEqualValue=true;
-      if (outAbleKartoj==false){
-        return 0;
+      console.log("whichEffect:"+whichEffect);
+      if (outAbleKartoj==false && whichEffect!=2 && whichEffect!=3){
+        return;
       }
       for(let i in selectCard){
         if(selectCard[i]==true){
           pushCardId.push(i);
           selectCardNum++;
+        }
+      }
+      if(selectCardNum==0){
+        return;
+      }
+      if(whichEffect==2 || whichEffect==3){
+        console.log("push");
+        if(selectCardNum==1){
+          socketio.emit("push_my_card",pushCardId);
+          return;
         }
       }
       if(selectCardNum>1){
@@ -246,7 +302,6 @@
           }
         }
       }
-      console.log(boolEqualValue);
       if (selectCardNum==outKartojNum){
         socketio.emit("push_my_card",pushCardId);
       }else if(outKartojNum==0 && boolEqualValue==true){
@@ -275,6 +330,151 @@
         passDom.style.display="block";
       }else{
         passDom.style.display="none";
+      }
+    }
+
+    function usedList(){
+      ////
+      let selectDom=document.getElementById("used_list");
+      let inventionDom=document.getElementById("invention_button");
+      if(selectDom.style.display=="block"){
+        selectDom.style.display="none";
+        inventionDom.style.display="none";
+      }else{
+        selectDom.style.display="block";
+        if(whichEffect==1){
+          inventionDom.style.display="block";
+        }
+      }
+    }
+
+    function usedInfo(usedInfo){
+      let selectDom=document.getElementById("used_list");
+      usedKartoj=usedInfo;
+      while(selectDom.firstChild){
+        selectDom.removeChild(selectDom.firstChild);
+      }
+      for(let i=0;i<usedKartoj.length;i++){
+        for(let j=usedKartoj.length-1;j>i;j--){
+          if(usedKartoj[j].num<usedKartoj[i].num){
+            let temp=usedKartoj[i];
+            usedKartoj[i]=usedKartoj[j];
+            usedKartoj[j]=temp;
+          }
+        }
+      }
+      for(let i=0;i<usedKartoj.length;i++){
+        let optionDom=document.createElement("option");
+        let message;
+        let effect;
+        let num;
+        if(usedKartoj[i].num<10){
+          num="0"+usedKartoj[i].num;
+        }else{
+          num=usedKartoj[i].num;
+        }
+        switch(usedKartoj[i].type){
+          case 0:effect="　　";
+            break;
+          case 1:effect="発見";
+            break;
+          case 2:effect="文化";
+            break;
+          case 3:effect="戦争";
+            break;
+          default:effect="＃＃";
+        }
+        message=num+"世紀　"+effect+"　"+usedKartoj[i].name;
+        optionDom.innerHTML=message;
+        optionDom.onclick=function(){
+          //console.log(usedKartoj[i].id);
+          selectUsedId=usedKartoj[i].id;
+        }
+        selectDom.appendChild(optionDom);
+      }
+    }
+
+    function usedDisplay(bool){
+      let buttonDom=document.getElementById("used_button");
+      let selectDom=document.getElementById("used_list");
+      if(bool){
+        buttonDom.style.display="block";
+      }else{
+        buttonDom.style.display="none";
+        selectDom.style.display="none";
+      }
+    }
+
+    function effectButton(effectAry){
+      //console.log("effectButton");
+      let domEffect=document.getElementById("effect_div");
+      while(domEffect.firstChild){
+        domEffect.removeChild(domEffect.firstChild);
+      }
+      if(effectAry.length<0){
+        domEffect.style.display="none";
+        return;
+      }else{
+        domEffect.style.display="block";
+        for(let i=0;i<effectAry.length;i++){
+          let domButton=document.createElement("button");
+          let buttonY=370;
+          let buttonX;
+          let width=150;
+          let buttonStyle;
+          let text="###";
+
+          if(effectAry.length==1){
+            buttonX=325;
+          }else{
+            buttonX=200+i*(250);
+          }
+          switch(effectAry[i]){
+            case 1:text="発見";
+              domButton.onclick=function(){
+                socketio.emit("push_invention");
+              }
+              break;
+            case 2:text="文化";
+              domButton.onclick=function(){
+                socketio.emit("push_culture");
+              }
+              break;
+            case 3:text="戦争";
+              domButton.onclick=function(){
+                socketio.emit("push_war");
+              }
+              break;
+            default:text="###";
+              break;
+          }
+          buttonStyle="position:absolute;left:"+String(buttonX)+";top:"+String(buttonY)+";width:"+String(width)+";";
+          domButton.style=buttonStyle;
+          domButton.innerHTML=text;
+          domEffect.appendChild(domButton);
+          //console.log(domButton);
+        }
+      }
+    }
+
+    function whichEffectReceive(which_effect){
+      let buttonDom=document.getElementById("used_button");
+      let selectDom=document.getElementById("used_list");
+      let inventionDom=document.getElementById("invention_button");
+      console.log("which_effect:"+which_effect);
+      whichEffect=which_effect;
+      if(whichEffect==1){
+        buttonDom.style.display="block";
+        selectDom.style.display="block";
+        inventionDom.style.display="block";
+      }else{
+        inventionDom.style.display="none";
+      }
+    }
+
+    function pushSelectUsed(){
+      if(whichEffect==1){
+        socketio.emit("select_used",selectUsedId);
       }
     }
 
@@ -457,7 +657,12 @@
               break;
           }
           eraDom.innerHTML=kartojInfo[i].era;
-
+          console.log("karto.text:"+kartojInfo[i].text);
+          if(kartojInfo[i].text==""){
+            textDom.innerHTML="データなし";
+          }else{
+            textDom.innerHTML=kartojInfo[i].text;
+          }
         };
         domCard.appendChild(domImg);
         domCard.appendChild(domNumber);
@@ -489,7 +694,13 @@
           typeDom.innerHTML="おかしなデータ";
           break;
       }
+      console.log("karto.text:"+karto.text);
       eraDom.innerHTML=karto.era;
+      if(karto.text==""){
+        textDom.innerHTML="データなし";
+      }else{
+        textDom.innerHTML=karto.text;
+      }
     }
 
     function tableInfo(kartojInfo){
@@ -561,6 +772,12 @@
               break;
           }
           eraDom.innerHTML=kartojInfo[i].era;
+          console.log("karto.text:"+kartojInfo[i].text);
+          if(kartojInfo[i].text==""){
+            textDom.innerHTML="データなし";
+          }else{
+            textDom.innerHTML=kartojInfo[i].text;
+          }
         };
         tableDom.appendChild(domImg);
         tableDom.appendChild(domNumber);
@@ -571,8 +788,62 @@
       document.getElementById("p1_name").innerHTML=userName;
     }
 
+    function pushUserImg(num){
+      socketio.emit("push_user_img",num);
+    }
+
+    function whoTurnImg(num){
+      let imgAryDom=[
+        document.getElementById("p1_img"),
+        document.getElementById("p2_img"),
+        document.getElementById("p3_img"),
+        document.getElementById("p4_img")
+      ];
+      for(let i=0;i<imgAryDom.length;i++){
+        if(i==num){
+          imgAryDom[i].src=player_img_0;
+        }else{
+          imgAryDom[i].src=player_img_1;
+        }
+      }
+    }
+
+    function displayWhoImg(num){
+      let imgAryDom=[
+        document.getElementById("p1_img"),
+        document.getElementById("p2_img"),
+        document.getElementById("p3_img"),
+        document.getElementById("p4_img")
+      ];
+      imgAryDom[num].style.display="none";
+    }
+
+    function displayWhoLight(num){
+      console.log(num);
+      let imgAryDom=[
+        document.getElementById("p1_img"),
+        document.getElementById("p2_img"),
+        document.getElementById("p3_img"),
+        document.getElementById("p4_img")
+      ];
+      imgAryDom[num].src=player_img_0;
+    }
+
     function getOutKartojNum(num){
       outKartojNum=num;
+    }
+
+    function finishGame(ary){
+      let resultAryDom=[
+        document.getElementById("result_1"),
+        document.getElementById("result_2"),
+        document.getElementById("result_3"),
+        document.getElementById("result_4")
+      ];
+      for(let i=0;i<resultAryDom.length;i++){
+        resultAryDom[i].innerHTML=String(i+1)+"位："+ary[i];
+      }
+      changePage("result_page");
     }
 
 

@@ -54,6 +54,21 @@ var server=require("http").createServer(function(req,res){
       var output=fs.readFileSync("./load/images/haikei.png");
       res.end(output);
       break;
+    case '/load/images/now_player.png':
+      res.writeHead(200,{"Content-Type":"image/png"});
+      var output=fs.readFileSync("./load/images/now_player.png");
+      res.end(output);
+      break;
+    case '/load/images/else_player.png':
+      res.writeHead(200,{"Content-Type":"image/png"});
+      var output=fs.readFileSync("./load/images/else_player.png");
+      res.end(output);
+      break;
+    case '/load/images/result_haikei.png':
+      res.writeHead(200,{"Content-Type":"image/png"});
+      var output=fs.readFileSync("./load/images/result_haikei.png");
+      res.end(output);
+      break;
   }
 }).listen(4567);
 var io=require("socket.io").listen(server);
@@ -65,16 +80,24 @@ var kartoj=[];
 var userKartoj={};
 var usedKartoj=[];
 var tableKartoj=[];
+var effectAry=[];
+var whichEffect=0;
+var bool_select_user;
+var selectUserId;
+var selectHash={};
+var selectTwoHash={};
 
 var turnKartoj={};
 var turnCounter=0;
 var whoTurn;
 var lastPushPlayer;
+var finishPlayer=[];
 
 var outKartojNum=0;
 var GAME_STATE={
   game_start:"GAME_START",
-  game_play:"GAME_PLAY"
+  game_play:"GAME_PLAY",
+  game_finish:"GAME_FINISH"
 };
 var gameState=GAME_STATE["game_start"];
 
@@ -131,8 +154,15 @@ io.sockets.on("connection",function(socket){
   });
 
   socket.on("push_my_card",function(cardAry){
+    //console.log(cardAry);
+    //console.log("cardAry.length:"+cardAry.length);
+    //console.log("whichEffect:"+whichEffect);
     if(outKartojNum==0){
       ;
+    }
+    else if(cardAry.length==1 && (whichEffect==2 || whichEffect==3)){
+      twoPush(cardAry);
+      return;
     }
     else if(cardAry.length!=outKartojNum){
       return 0;
@@ -145,13 +175,105 @@ io.sockets.on("connection",function(socket){
   });
 
   socket.on("push_pass",function(){
-    let beforeCounter=turnCounter-1;
-    if(beforeCounter<0){
-      beforeCounter=userOrder.length-1;
-    }
+
     if(gameState==GAME_STATE["game_play"]){
-      if(socket.id==userOrder[beforeCounter]&&outKartojNum!=0){
+      if(socket.id==userOrder[turnCounter]&&outKartojNum!=0){
         turnCount(turnCounter);
+      }
+    }
+  });
+
+  socket.on("push_invention",function(){
+    pushEffect(1);
+  });
+
+  socket.on("push_culture",function(){
+    pushEffect(2);
+  });
+
+  socket.on("push_war",function(){
+    pushEffect(3);
+  });
+
+  socket.on("select_used",function(selectUsedId){
+    let message;
+    if(userOrder[turnCounter]==socket.id && whichEffect==1){
+      let index=100;
+      for(index=0;index<usedKartoj.length;index++){
+        if(usedKartoj[index].id==selectUsedId){
+          break;
+        }
+      }
+      if(index==100){
+        return;
+      }
+      if(usedKartoj[index].type==1){
+        io.sockets.emit("display_message",{value:"発見カードは手札に戻せません"});
+        return;
+      }
+      ///
+      message=String(usedKartoj[index].num)+"世紀"+String(usedKartoj[index].name)+"を手札に戻しました";
+      userKartoj[socket.id].push(usedKartoj[index]);
+      usedKartoj.splice(index,1);
+      whichEffect=0;
+      pushEnemyCardNum();
+      pushMyCard();
+      io.sockets.emit("used_info",{value:usedKartoj});
+      io.sockets.emit("display_message",{value:message});
+      io.to(socket.id).emit("which_effect",{value:whichEffect});
+      setTimeout(function(){
+        turnCount(turnCounter);
+      },2000);
+    }
+  });
+
+  socket.on("push_user_img",function(num){
+    if(userOrder[turnCounter]==socket.id && bool_select_user==true){
+      if(whichEffect==2 || whichEffect==3){
+        //console.log(num);
+        let index=turnCounter+num;
+        let message;
+        if(index>userOrder.length-1){
+          index-=userOrder.length;
+        }
+        //console.log("indexxx:"+index);
+        selectHash={};
+        selectTwoHash={};
+        selectHash[socket.id]=false;
+        selectHash[userOrder[index]]=false;
+        selectUserId=userOrder[index];
+        message=String(userHash[userOrder[index]])+"が選ばれました";
+        io.sockets.emit("display_message",{value:message});
+        for(let i=0;i<userOrder.length;i++){
+          let interval;
+          if(index>i){
+            interval=index-i;
+          }else if(index==i){
+            interval=0;
+          }else{
+            interval=userOrder.length-i+index;
+          }
+          io.to(userOrder[i]).emit("display_who_light",{value:interval});
+        }
+        bool_select_user=false;
+
+        setTimeout(function(){
+          if(whichEffect==2){
+            for(index in selectHash){
+              io.to(index).emit("which_effect",{value:whichEffect});
+              //console.log("index:"+index);
+              io.to(index).emit("display_message",{value:"交換するカードを１枚出してください"});
+              io.to(index).emit("operation_push",{value:true});
+            }
+          }else{
+            for(index in selectHash){
+              io.to(index).emit("which_effect",{value:whichEffect});
+              //console.log("index:"+index);
+              io.to(index).emit("display_message",{value:"カードを１枚出してください"});
+              io.to(index).emit("operation_push",{value:true});
+            }
+          }
+        },2000);
       }
     }
   });
@@ -188,14 +310,37 @@ io.sockets.on("connection",function(socket){
     }
     usedKartoj.push(userKartoj[userId][index]);
     userKartoj[userId].splice(index,1);
+    io.sockets.emit("used_info",{value:usedKartoj});
+  }
+
+  /////////////
+  function tableKarto(userId,cardAry){
+    tableKartoj.push(cardAry);
+    for(let i=0;i<cardAry.length;i++){
+      let kartoId=cardAry[i];
+      for(let j=0;j<userKartoj[userId].length;j++){
+        if(userKartoj[userId][j].id==kartoId){
+          userKartoj[userId].splice(j,1);
+          break;
+        }
+      }
+    }
   }
 
   function turnCount(turn){
     let message;
     turnCounter=turn;
+    turnCounter+=1;
+    if(turnCounter>userOrder.length-1){
+      turnCounter=0;
+    }
     whoTurn=userOrder[turnCounter]
-    returnMyKartoj(nowPlayer());
+    whichEffect=0;
+    bool_select_user=false;
+    returnMyKartoj(whoTurn);
+    io.sockets.emit("used_bool",{value:true});
     for(let id in userHash){
+      io.to(id).emit("who_turn_img",{value:intervalPlayer(id,whoTurn)})
       if(id==whoTurn){
         message="あなたの番です。カードを出してください。";
         io.to(id).emit("operation_push",{value:true});
@@ -212,15 +357,54 @@ io.sockets.on("connection",function(socket){
       io.to(id).emit("display_message",{value:message});
     }
 
-    turnCounter+=1;
-    if(turnCounter>userOrder.length-1){
-      turnCounter=0;
-    }
-
-    if(userKartoj[nowPlayer()].length==0){
-      console.log(whoTurn);
-      console.log(userKartoj[whoTurn]);
+    if(userKartoj[whoTurn].length==0){
       turnCount(turnCounter);
+    }
+  }
+
+  function intervalPlayer(id1,id2){
+    let count1=0;
+    let count2=0;
+
+    if(id1==id2){
+      return 0;
+    }
+    for(let i=0;i<userOrder.length;i++){
+      if(userOrder[i]==id1){
+        count1=i;
+      }else if(userOrder[i]==id2){
+        count2=i;
+      }
+    }
+    if(count1<count2){
+      return count2-count1;
+    }else{
+      return userOrder.length-count1+count2;
+    }
+  }
+
+  function finishGame(){
+    if(finishPlayer.length==3){
+      //console.log("finish");
+      let nameAry=[];
+      for(let i in userHash){
+        let flag=true;
+        for(let j=0;j<finishPlayer.length;j++){
+          if(i==finishPlayer[j]){
+            flag=false;
+          }
+        }
+        if(flag==true){
+          finishPlayer.push(i);
+        }
+      }
+      //console.log("finishPlayer:"+finishPlayer);
+      for(let i=0;i<finishPlayer.length;i++){
+        nameAry.push(userHash[finishPlayer[i]]);
+      }
+      //console.log("nameAry:"+nameAry);
+      gameState=GAME_STATE["game_finish"];
+      io.sockets.emit("finish_player",{value:nameAry});
     }
   }
 
@@ -240,9 +424,11 @@ io.sockets.on("connection",function(socket){
     }
     for(let i=0;i<tableKartoj.length;i++){
       for(let j=0;j<tableKartoj[i].length;j++){
-        usedKartoj.push(tableKartoj[i][j]);
+        let karto=searchKartoj(tableKartoj[i][j]);
+        usedKartoj.push(karto);
       }
     }
+    io.sockets.emit("used_info",{value:usedKartoj});
     tableKartoj=[];
     outKartojNum=0;
     io.sockets.emit("out_kartoj_num",{value:outKartojNum});
@@ -326,7 +512,7 @@ io.sockets.on("connection",function(socket){
         gameState=GAME_STATE["game_play"];
         outKartojNum=0;
         io.sockets.emit("out_kartoj_num",{value:outKartojNum});
-        turnCount(0);
+        turnCount(-1);
       },7000)
 
     }
@@ -341,10 +527,7 @@ io.sockets.on("connection",function(socket){
         return 0;
       }
     }
-    tableKartoj.push(cardAry);
-    for(let i=0;i<cardAry.length;i++){
-      usedKarto(cardAry[i],socket.id);
-    }
+    tableKarto(socket.id,cardAry);
     pushMyCard();
     io.to(socket.id).emit("operation_push",{value:false});
     pushEnemyCardNum();
@@ -353,9 +536,225 @@ io.sockets.on("connection",function(socket){
       lastKartoj=tableKartoj.slice(-1)[0];
       outKartojNum=lastKartoj.length;
     }
-    turnCount(turnCounter);
     lastPushPlayer=socket.id;
+    /////////
+    handZero(socket.id);
     io.sockets.emit("out_kartoj_num",{value:outKartojNum});
+    effectKartoj(cardAry);
+    if(effectAry.length>0){
+      pushEffectAry();
+      return;
+    }
+    finishGame();
+    turnCount(turnCounter);
+  }
+
+  function handZero(id){
+    if(userKartoj[id].length==0){
+      //console.log("handZero");
+      addFinishPlayer(id);
+      for(let index=0;index<userOrder.length;index++){
+        io.to(userOrder[index]).emit("display_who_img",{value:intervalPlayer(userOrder[index],id)});
+      }
+    }
+  }
+
+  function twoPush(cardAry){
+    console.log("twoPush");
+    io.to(socket.id).emit("operation_push",{value:false});
+    if(cardAry.length!=1){
+      return;
+    }
+    for(let index in selectHash){
+      if(index==socket.id && selectHash[index]==false){
+        selectHash[socket.id]=true;
+        selectTwoHash[socket.id]=cardAry[0];
+      }
+    }
+    console.log(selectTwoHash);
+    if(Object.keys(selectTwoHash).length==2){
+      console.log("selectTwoHash");
+      if(whichEffect==2){
+        exchangeEffect();
+      }else{
+        battleEffect();
+      }
+    }
+  }
+
+  function exchangeEffect(){
+    //console.log("exchange");
+    let userAry=[];
+    let card1;
+    let card2;
+    let message1;
+    let message2;
+    let message3;
+    for(let index in selectTwoHash){
+      userAry.push(index);
+    }
+    card1=searchKartoj(selectTwoHash[userAry[1]]);
+    card2=searchKartoj(selectTwoHash[userAry[0]]);
+    //console.log("card1:"+card1);
+    //console.log("userKartoj:"+userKartoj[userAry[0]]);
+    userKartoj[userAry[0]].push(card1);
+    userKartoj[userAry[1]].push(card2);
+    for(let index in selectTwoHash){
+      console.log("selectTwoHash[index]"+selectTwoHash[index]);
+      for(let i=0;i<userKartoj[index].length;i++){
+        console.log("userKartoj[index][i]:"+userKartoj[index][i]);
+        if(selectTwoHash[index]==userKartoj[index][i].id){
+          console.log("zzzzzzz");
+          userKartoj[index].splice(i,1);
+          break;
+        }
+      }
+    }
+    message1=String(userHash[userAry[0]])+"←"+String(card2.num)+"世紀"+String(card1.name)+"、";
+    message2=String(userHash[userAry[1]])+"←"+String(card2.num)+"世紀"+String(card2.name);
+    message3="交換が成立しました　"+message1+message2;
+    io.sockets.emit("display_message",{value:message3});
+    whichEffect=0;
+    pushEnemyCardNum();
+    pushMyCard();
+    io.sockets.emit("which_effect",{value:whichEffect});
+    setTimeout(function(){
+      turnCount(turnCounter);
+    },2000);
+  }
+
+  function battleEffect(){
+    console.log("battle");
+    let nowId=userOrder[turnCounter];
+    let enemyId;
+    let card1;
+    let card2;
+    let message1;
+    let message2;
+    let message3;
+    for(let index in selectTwoHash){
+      if(index!=nowId){
+        enemyId=index;
+      }
+    }
+    card1=searchKartoj(selectTwoHash[nowId]);
+    card2=searchKartoj(selectTwoHash[enemyId]);
+    message1=String(userHash[nowId])+"："+String(card1.num)+"世紀"+String(card1.name);
+    message2=String(userHash[enemyId])+"："+String(card2.num)+"世紀"+String(card2.name);
+    if(card1.num>=card2.num){
+      message3=String(userHash[enemyId])+"←"+String(card1.num)+"世紀"+String(card1.name);
+      userKartoj[enemyId].push(card1);
+      for(let index=0;index<userKartoj[nowId].length;index++){
+        if(userKartoj[nowId][index].id==card1.id){
+          userKartoj[nowId].splice(index,1);
+          break;
+        }
+      }
+      handZero(nowId);
+    }else{
+      message3=String(userHash[nowId])+"←"+String(card2.num)+"世紀"+String(card2.name);
+      userKartoj[nowId].push(card2);
+      for(let index=0;index<userKartoj[enemyId].length;index++){
+        if(userKartoj[enemyId][index].id==card2.id){
+          userKartoj[enemyId].splice(index,1);
+          break;
+        }
+      }
+      handZero(enemyId);
+    }
+    io.sockets.emit("display_message",{value:"結果が出ました"});
+    setTimeout(function(){
+      io.sockets.emit("display_message",{value:message1});
+    },2000);
+    setTimeout(function(){
+      io.sockets.emit("display_message",{value:message2});
+    },3000);
+    setTimeout(function(){
+      whichEffect=0;
+      pushEnemyCardNum();
+      pushMyCard();
+      io.sockets.emit("which_effect",{value:whichEffect});
+      io.sockets.emit("display_message",{value:message3});
+      turnCount(turnCounter);
+    },4000);
+  }
+
+  function pushEffectAry(){
+    //console.log("effectAry : "+effectAry);
+    let user=userHash[socket.id];
+    let message=user+"さんが特殊効果を選択中です";
+    io.to(socket.id).emit("display_message",{value:"発動する特殊効果を選んでください"});
+    io.to(socket.id).emit("effect_ary",{value:effectAry});
+    io.to(socket.id).emit("pass_able",{value:false});
+    for(let index in userHash){
+      if(index!=socket.id){
+        io.to(index).emit("display_message",{value:message});
+      }
+    }
+  }
+
+  function pushEffect(num){
+    let message;
+    let effect;
+
+    whichEffect=num;
+    if(whoTurn!=socket.id){
+      return;
+    }
+    switch(num){
+      case 1:message="手札に戻すカードを選んでください";
+        effect="発見";
+        break;
+      case 2:message="カードを交換する相手を選んでください";
+        effect="文化";
+        bool_select_user=true;
+        break;
+      case 3:message="争う相手を選んでください";
+        effect="戦争";
+        bool_select_user=true;
+        break;
+      default:message="おかしなメッセージ";
+        effect="？？";
+    }
+    io.to(socket.id).emit("display_message",{value:message});
+    io.to(socket.id).emit("effect_ary",{value:new Array()});
+    io.to(socket.id).emit("which_effect",{value:whichEffect});
+    for(let index in userHash){
+      if(index!=socket.id){
+        io.to(index).emit("display_message",{value:effect+"が発動されました"});
+      }
+    }
+  }
+
+  function effectKartoj(cardAry){
+    let tableLength=Object.keys(tableKartoj).length;
+    effectAry=[];
+    //console.log("tableLength:"+tableLength);
+    //console.log("lengthKartoj"+userKartoj[socket.id].length);
+    if(userKartoj[socket.id].length<=0){
+      return;
+    }
+    if(outKartojNum>=3){
+      return;
+    }
+    for(let i=0;i<cardAry.length;i++){
+      let karto=searchKartoj(cardAry[i]);
+      if(karto.type!=0){
+        //console.log("karto.type:"+karto.type)
+        if(tableLength>1 || karto.type!=1){
+          effectAry.push(karto.type);
+        }
+      }
+    }
+  }
+
+  function addFinishPlayer(id){
+    for(let i=0;i<finishPlayer.length;i++){
+      if(finishPlayer[i]==id){
+        return;
+      }
+    }
+    finishPlayer.push(id);
   }
 
   function pushEnemyCardNum(){
