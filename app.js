@@ -610,7 +610,7 @@ io.sockets.on("connection",function(socket){
         }
       }
     }
-    message1=String(userHash[userAry[0]])+"←"+String(card2.num)+"世紀"+String(card1.name)+"、";
+    message1=String(userHash[userAry[0]])+"←"+String(card1.num)+"世紀"+String(card1.name)+"、";
     message2=String(userHash[userAry[1]])+"←"+String(card2.num)+"世紀"+String(card2.name);
     message3="交換が成立しました　"+message1+message2;
     io.sockets.emit("display_message",{value:message3});
